@@ -147,3 +147,56 @@ def lickCalc(licks, offset = [], burstThreshold = 0.25, runThreshold = 10,
 def removeshortbursts(data, inds):
     data = [data[i] for i in inds]
     return data
+
+def iliFig(ax, data, color='xkcd:auburn', type='bars'):
+    if type == 'bars':
+        ax.hist(data['ilis'], np.arange(0, 0.5, 0.02), edgecolor=color, facecolor='none', linewidth=2)
+     
+    elif type == 'line':
+        bins = np.arange(0, 0.5, 0.02)
+        histdata = np.histogram(data['ilis'], bins=bins)
+        ax.plot(histdata[0], 'o', markerfacecolor='none')
+    
+    figlabel = '%.2f Hz' % data['freq']
+    ax.text(0.9, 0.9, figlabel, ha='right', va='top', transform = ax.transAxes)
+    
+    ax.set_xlabel('Interlick interval (s)')
+    ax.set_ylabel('Frequency')
+        
+def cumburstprob(ax, data, color='xkcd:auburn'):
+    cumprob = []
+    for i in range(1,100):
+        cumprob.append(len([x for x in data['bLicks'] if x>i]))
+    cumprob = [i/max(cumprob) for i in cumprob]
+        
+    ax.plot(cumprob, 'o', markeredgecolor=color, markerfacecolor='none')
+    ax.set_ylabel('Probability of cluster size > n')
+    ax.set_xlabel('Cluster size (n)')
+    
+    figlabel = (str(data['bNum']) + ' total clusters\n' +
+                str('%.1f' % data['bMean']) + ' licks/cluster.')
+    
+    ax.text(0.9, 0.9, figlabel, ha='right', va='top', transform = ax.transAxes)
+        
+def lickraster(ax, licks, lickrange, color='grey', color2='red'):
+    
+    xdata = licks[lickrange[0]:lickrange[1]]
+    xdata = [x-xdata[0] for x in xdata]
+    
+    firstlick = [xdata[0]] + [val for i, val in enumerate(xdata[1:]) if (xdata[i+1]-xdata[i])>0.5]
+    
+    y1 = np.ones(len(xdata))
+    y2 = y2 = np.ones(len(firstlick))
+    
+    ax.plot(xdata, y1, '|', markeredgecolor=color)
+    ax.plot(firstlick, y2, '|', color=color2)
+    
+    ax.yaxis.set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    
+    ax.set_ylim([0, 12])
+    ax.set_xlabel('Time (s)')
+    
+    ax.text(-1, 1, 'Licks', ha='right', va='center')
